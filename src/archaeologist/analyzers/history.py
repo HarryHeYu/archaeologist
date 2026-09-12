@@ -9,6 +9,11 @@ from pathlib import Path
 
 from ..gitcmd import GitRepo
 from ..models import Contributor, HotFile, RecentChanges
+from ..walker import DEFAULT_IGNORE_DIRS, language_for
+
+# non-source files that are still meaningful hot-file candidates
+_META_FILES = {"README.md", "CMakeLists.txt", "Makefile", "package.json",
+               "pyproject.toml", "setup.py", "Cargo.toml", "go.mod", "Dockerfile"}
 
 # Very large histories (e.g. the Linux kernel) make full numstat passes slow.
 # Cap the history window for churn/hotness scoring and say so in the output.
@@ -83,12 +88,20 @@ def analyze_hot_files(git: GitRepo | None, tracked: list[str],
         return []
     tracked_set = set(tracked) if tracked else None
 
+    def _is_candidate(path: str) -> bool:
+        if tracked_set is not None and path not in tracked_set:
+            return False
+        parts = path.split("/")
+        if any(seg in DEFAULT_IGNORE_DIRS or seg.startswith(".") for seg in parts):
+            return False
+        return language_for(Path(path)) is not None or parts[-1] in _META_FILES
+
     max_commits = max(commits_by_file.values()) or 1
     max_lines = max(lines_by_file.values()) or 1
     max_contribs = max((len(v) for v in contributors_by_file.values()), default=1) or 1
     results = []
     for path, commits in commits_by_file.items():
-        if tracked_set is not None and path not in tracked_set:
+        if not _is_candidate(path):
             continue
         recent = 0
         if last_touch.get(path):

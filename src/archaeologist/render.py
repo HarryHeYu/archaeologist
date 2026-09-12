@@ -92,12 +92,12 @@ def render_entrypoints(a: Analysis) -> list[str]:
     return L
 
 
-def render_hot(a: Analysis) -> list[str]:
+def render_hot(hot_files: list) -> list[str]:
     L = ["", "Hot Files", "─────────"]
-    if not a.hot_files:
+    if not hot_files:
         L.append("  (git history unavailable)")
         return L
-    for i, h in enumerate(a.hot_files, 1):
+    for i, h in enumerate(hot_files, 1):
         L.append(
             f"  {i}. {h.path}")
         L.append(f"     commits: {h.commits}   contributors: {h.contributors}   "
@@ -106,8 +106,7 @@ def render_hot(a: Analysis) -> list[str]:
     return L
 
 
-def render_recent(a: Analysis) -> list[str]:
-    r = a.recent
+def render_recent(r) -> list[str]:
     L = ["", f"Recent Changes (last {r.since_days} days)", "──────────────────────────────"]
     if r.commits == 0:
         L.append("  No commits in this window.")
@@ -130,12 +129,12 @@ def render_recent(a: Analysis) -> list[str]:
     return L
 
 
-def render_contributors(a: Analysis) -> list[str]:
+def render_contributors(contributors: list) -> list[str]:
     L = ["", "Contributors", "────────────"]
-    if not a.contributors:
+    if not contributors:
         L.append("  (git history unavailable)")
         return L
-    for c in a.contributors:
+    for c in contributors:
         L.append(f"  {c.name}")
         L.append(f"    commits: {c.commits}   files touched: {c.files_touched}   "
                  f"lines changed: {_fmt_int(c.lines_changed)}   last active: {c.last_commit[:10]}")
@@ -150,9 +149,9 @@ def render_scan(a: Analysis) -> str:
         render_languages(a),
         render_structure(a),
         render_entrypoints(a),
-        render_hot(a),
-        render_recent(a),
-        render_contributors(a),
+        render_hot(a.hot_files),
+        render_recent(a.recent),
+        render_contributors(a.contributors),
     ]
     lines = []
     for s in sections:

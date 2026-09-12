@@ -20,7 +20,8 @@ Long-term vision lives in the project brief; this file tracks the executable pla
 - [x] `arch history <path|keyword>` — file/module evolution timeline
 - [x] `arch why <path>` — importance verdict with evidence
 - [x] `arch deps <path>` — include/import graph (file→file, simple regex level)
-- [ ] `arch contributors`, `arch recent`, `arch hot` as standalone commands (v0.2.1: available via `arch scan` for now)
+- [x] `arch contributors`, `arch recent`, `arch hot` as standalone commands
+- [x] `arch search` (paths / commit subjects / contributors)
 - [ ] incremental cache (`.archaeologist/`) keyed on HEAD commit (deferred: current scans are fast enough at tested scales)
 
 ## v0.3 — symbols (Tree-sitter, optional dependency)

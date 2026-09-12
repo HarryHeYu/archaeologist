@@ -2,6 +2,18 @@
 
 Append-only log. Newest first.
 
+## 2026-09-13 — v0.2.1 (standalone commands + search)
+- **`hot` / `recent` / `contributors` skip the filesystem walk entirely**
+  (they only need git + `ls-files`), so they answer in well under a second
+  even on repos where `scan` takes longer.
+- **Hot-file candidates are filtered to recognized source/metadata files** and
+  paths touching ignore-list dirs (vendor, `Dependencies/`, dotfiles) are
+  dropped — a vendored `glfw3.h` with one giant import commit must not top the
+  churn ranking. Trade-off: `.github/` workflow churn is not shown; acceptable.
+- **`search` is plain case-insensitive substring matching** with a filename >
+  directory ranking bias. No index yet; if repos feel slow, add a persisted
+  path/subject index alongside the planned cache.
+
 ## 2026-09-13 — v0.2 (file/relational layer)
 - **File-scoped commands take `path` before `repo`** (`arch file src/x.cpp .`),
   so they work naturally from inside a repo (`arch file src/x.cpp` with the

@@ -51,6 +51,10 @@ python -m archaeologist scan .
 | `arch history <path\|keyword> <repo>` | Evolution timeline of a file (creation, rewrites, renames, yearly activity) or of a module keyword (related paths + matching commits by year) |
 | `arch why <path> <repo>` | Importance verdict (HIGH/MEDIUM/LOW) with all the evidence that produced it |
 | `arch deps <path> <repo>` | Internal include/import dependencies and reverse importers (Python/C/C++/TS/JS/Rust/Go/Java, best effort) |
+| `arch hot <repo>` | Standalone hot-files ranking |
+| `arch recent <repo>` (`--days N`) | Standalone recent-change summary |
+| `arch contributors <repo>` | Standalone contributor analysis |
+| `arch search <query> <repo>` | Search paths, commit messages, and contributors (substring, case-insensitive) |
 
 Note the argument order: file-scoped commands take the path first, the
 repository root second (`arch file src/main.cpp .`). Both relative and

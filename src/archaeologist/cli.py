@@ -16,6 +16,8 @@ from .analyzers.history import analyze_hot_files, analyze_recent, analyze_contri
 from .analyzers.tree import build_tree
 from .analyzers.dossier import analyze_file, analyze_why, analyze_deps_view
 from .analyzers.evolution import file_evolution, keyword_evolution
+from .analyzers.search import search as run_search
+from .render import render_scan, render_hot, render_recent, render_contributors
 from .render import render_scan
 from .render_v2 import (
     render_file, render_why, render_evolution_file, render_evolution_keyword,
@@ -152,6 +154,62 @@ def cmd_deps(args) -> int:
     return 0
 
 
+def _git_root(args) -> Path:
+    root = Path(args.repo).resolve()
+    if not root.exists():
+        print(f"error: path does not exist: {root}", file=sys.stderr)
+        sys.exit(2)
+    return root
+
+
+def cmd_hot(args) -> int:
+    root = _git_root(args)
+    git = GitRepo(root)
+    ls = git.try_out("ls-files", "-z")
+    tracked = [p for p in ls.split("\x00") if p] if ls else \
+        [f.rel for f in walk_repo(root).files]
+    hot = analyze_hot_files(git, tracked, top_n=args.top)
+    print("\n".join(render_hot(hot)) + "\n")
+    return 0
+
+
+def cmd_recent(args) -> int:
+    root = _git_root(args)
+    git = GitRepo(root)
+    r = analyze_recent(git, days=args.days)
+    print("\n".join(render_recent(r)) + "\n")
+    return 0
+
+
+def cmd_contributors(args) -> int:
+    root = _git_root(args)
+    c = analyze_contributors(GitRepo(root), top_n=args.top)
+    print("\n".join(render_contributors(c)) + "\n")
+    return 0
+
+
+def cmd_search(args) -> int:
+    root = _git_root(args)
+    res = run_search(root, args.query, limit=args.top)
+    q = args.query
+    if not (res["paths"] or res["commits"] or res["contributors"]):
+        print(f"No matches for '{q}'.")
+        return 1
+    if res["paths"]:
+        print(f"Paths matching '{q}':")
+        for p in res["paths"]:
+            print(f"  {p}")
+    if res["commits"]:
+        print(f"\nCommits mentioning '{q}':")
+        for c in res["commits"]:
+            print(f"  {c['date']}  {c['hash'][:8]}  {c['author']:<16} {c['subject']}")
+    if res["contributors"]:
+        print(f"\nContributors matching '{q}':")
+        for c in res["contributors"]:
+            print(f"  {c['name']} <{c['email']}>")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="arch",
@@ -183,6 +241,27 @@ def main(argv: list[str] | None = None) -> int:
     p_hist.add_argument("target", help="file path, or a module/keyword such as 'tokenizer'")
     p_hist.add_argument("repo", nargs="?", default=".")
     p_hist.set_defaults(func=cmd_history)
+
+    p_hot = sub.add_parser("hot", help="most-churned files per git history")
+    p_hot.add_argument("repo", nargs="?", default=".")
+    p_hot.add_argument("-n", "--top", type=int, default=15)
+    p_hot.set_defaults(func=cmd_hot)
+
+    p_rec = sub.add_parser("recent", help="recent change summary")
+    p_rec.add_argument("repo", nargs="?", default=".")
+    p_rec.add_argument("--days", type=int, default=30)
+    p_rec.set_defaults(func=cmd_recent)
+
+    p_con = sub.add_parser("contributors", help="who works where")
+    p_con.add_argument("repo", nargs="?", default=".")
+    p_con.add_argument("-n", "--top", type=int, default=10)
+    p_con.set_defaults(func=cmd_contributors)
+
+    p_srch = sub.add_parser("search", help="search paths, commit messages, contributors")
+    p_srch.add_argument("query", help="keyword to look for")
+    p_srch.add_argument("repo", nargs="?", default=".")
+    p_srch.add_argument("-n", "--top", type=int, default=10)
+    p_srch.set_defaults(func=cmd_search)
 
     args = parser.parse_args(argv)
     logging.basicConfig(
