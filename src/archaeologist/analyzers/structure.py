@@ -50,11 +50,13 @@ def analyze_languages(walk: WalkResult, max_files: int = 4000) -> list[LanguageS
     by_lang: dict[str, LanguageStat] = {}
     text_files = [f for f in walk.files if not f.binary and f.language]
     if len(text_files) > max_files:
-        # Fast path: count lines without classifying comments (chunked read).
+        # Fast path: count lines without classifying comments, in parallel
+        # (line counting is I/O bound; threads overlap disk reads).
         by_ext_files: Counter = Counter()
         by_ext_lines: Counter = Counter()
-        for f in text_files:
-            by_ext_files[f.language] += 1
+        from concurrent.futures import ThreadPoolExecutor
+
+        def _count(f: RepoFile) -> tuple[str, int]:
             n = 0
             try:
                 with open(f.path, "rb") as fh:
@@ -62,7 +64,12 @@ def analyze_languages(walk: WalkResult, max_files: int = 4000) -> list[LanguageS
                         n += chunk.count(b"\n")
             except OSError:
                 pass
-            by_ext_lines[f.language] += n
+            return f.language, n
+
+        with ThreadPoolExecutor(max_workers=16) as pool:
+            for lang, n in pool.map(_count, text_files):
+                by_ext_files[lang] += 1
+                by_ext_lines[lang] += n
         stats = []
         for lang, files in by_ext_files.most_common():
             lines = by_ext_lines[lang]

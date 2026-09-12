@@ -99,9 +99,16 @@ def language_for(path: Path) -> str | None:
 
 
 def is_binary_file(path: Path) -> bool:
-    """Binary detection: extension first, then a NUL/UTF-16 sniff on the head."""
+    """Binary detection: extension first, then a NUL sniff on the head.
+
+    Files whose extension already maps to a known source language skip the
+    content sniff — one less open() per file, which matters on 100k-file
+    trees. A binary masquerading as `.c` is rare enough to accept.
+    """
     if path.suffix.lower() in BINARY_EXTENSIONS:
         return True
+    if language_for(path) is not None or path.name in ("Makefile", "Dockerfile", "Justfile"):
+        return False
     try:
         with open(path, "rb") as f:
             head = f.read(8192)
