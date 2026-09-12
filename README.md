@@ -40,12 +40,21 @@ Git Bash's coreutils `arch`), either add that directory to `PATH` or use:
 python -m archaeologist scan .
 ```
 
-## Commands (v0.1)
+## Commands
 
 | Command | What it does |
 |---|---|
 | `arch scan <repo>` | Full overview: git facts, languages, structure, entrypoints, hot files, recent changes, contributors |
 | `arch scan <repo> -o report.md` | Also writes a standalone Markdown report |
+| `arch tree <repo>` | Pruned, annotated tree with inferred directory roles |
+| `arch file <path> <repo>` | Per-file dossier: LOC, created/last-modified, commits, contributors, imports, co-change partners, notable events |
+| `arch history <path\|keyword> <repo>` | Evolution timeline of a file (creation, rewrites, renames, yearly activity) or of a module keyword (related paths + matching commits by year) |
+| `arch why <path> <repo>` | Importance verdict (HIGH/MEDIUM/LOW) with all the evidence that produced it |
+| `arch deps <path> <repo>` | Internal include/import dependencies and reverse importers (Python/C/C++/TS/JS/Rust/Go/Java, best effort) |
+
+Note the argument order: file-scoped commands take the path first, the
+repository root second (`arch file src/main.cpp .`). Both relative and
+absolute paths work; Unicode and space-containing paths are supported.
 
 Non-git directories work fine — git-derived sections degrade gracefully to
 "unavailable" instead of failing.

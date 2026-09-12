@@ -15,13 +15,13 @@ Long-term vision lives in the project brief; this file tracks the executable pla
 - [x] test suite + real-repo validation (Python / TS / C / huge tree)
 
 ## v0.2 — per-file and relational analysis
-- [ ] `arch tree` — meaningful pruned tree, not a dump
-- [ ] `arch file <path>` — per-file dossier (history, contributors, related files)
-- [ ] `arch history <path|keyword>` — file/module evolution timeline
-- [ ] `arch why <path>` — importance verdict with evidence
-- [ ] `arch deps <path>` — include/import graph (file→file, simple regex level)
-- [ ] `arch contributors`, `arch recent`, `arch hot` as standalone commands
-- [ ] incremental cache (`.archaeologist/`) keyed on HEAD commit
+- [x] `arch tree` — meaningful pruned tree, not a dump
+- [x] `arch file <path>` — per-file dossier (history, contributors, related files)
+- [x] `arch history <path|keyword>` — file/module evolution timeline
+- [x] `arch why <path>` — importance verdict with evidence
+- [x] `arch deps <path>` — include/import graph (file→file, simple regex level)
+- [ ] `arch contributors`, `arch recent`, `arch hot` as standalone commands (v0.2.1: available via `arch scan` for now)
+- [ ] incremental cache (`.archaeologist/`) keyed on HEAD commit (deferred: current scans are fast enough at tested scales)
 
 ## v0.3 — symbols (Tree-sitter, optional dependency)
 - [ ] unified Symbol model; `arch symbol <name>`

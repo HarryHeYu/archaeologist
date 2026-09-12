@@ -13,7 +13,13 @@ from .walker import walk_repo
 from .analyzers.overview import analyze_overview
 from .analyzers.structure import analyze_languages, analyze_structure, analyze_entrypoints
 from .analyzers.history import analyze_hot_files, analyze_recent, analyze_contributors
+from .analyzers.tree import build_tree
+from .analyzers.dossier import analyze_file, analyze_why, analyze_deps_view
+from .analyzers.evolution import file_evolution, keyword_evolution
 from .render import render_scan
+from .render_v2 import (
+    render_file, render_why, render_evolution_file, render_evolution_keyword,
+    render_deps, render_tree)
 from .report import generate_report
 from .models import Analysis, RecentChanges
 
@@ -59,6 +65,93 @@ def cmd_scan(args: argparse.Namespace) -> int:
     return 0
 
 
+def _ctx(args) -> tuple[Path, Analysis]:
+    root = Path(args.repo).resolve()
+    if not root.exists():
+        print(f"error: path does not exist: {root}", file=sys.stderr)
+        sys.exit(2)
+    return root, build_analysis(root)
+
+
+def _rel_path(root: Path, target: str) -> str | None:
+    """Resolve a user-supplied path (absolute or relative, POSIX or Windows)
+    to a repo-relative POSIX path that exists under root."""
+    p = Path(target)
+    if not p.is_absolute():
+        p = root / p
+    try:
+        rel = p.resolve().relative_to(root.resolve()).as_posix()
+    except ValueError:
+        return None
+    return rel if (root / rel).is_file() else None
+
+
+def cmd_tree(args) -> int:
+    root, a = _ctx(args)
+    print(render_tree(build_tree(a, max_depth=args.depth)))
+    return 0
+
+
+def cmd_file(args) -> int:
+    root, a = _ctx(args)
+    rel = _rel_path(root, args.path)
+    if rel is None:
+        print(f"error: file not found in repository: {args.path}", file=sys.stderr)
+        return 2
+    d = analyze_file(root, a, rel)
+    if d is None:
+        print(f"error: cannot analyze {rel}", file=sys.stderr)
+        return 2
+    print(render_file(d))
+    return 0
+
+
+def cmd_history(args) -> int:
+    root, a = _ctx(args)
+    rel = _rel_path(root, args.target)
+    if rel is not None:
+        evo = file_evolution(root, rel)
+        if evo is None:
+            print("error: no git history available for this file", file=sys.stderr)
+            return 1
+        print(render_evolution_file(evo))
+        return 0
+    evo = keyword_evolution(root, args.target)
+    if evo is None:
+        print("error: git history unavailable (not a git repository)", file=sys.stderr)
+        return 1
+    print(render_evolution_keyword(evo))
+    return 0
+
+
+def cmd_why(args) -> int:
+    root, a = _ctx(args)
+    rel = _rel_path(root, args.path)
+    if rel is None:
+        print(f"error: file not found in repository: {args.path}", file=sys.stderr)
+        return 2
+    ev = analyze_why(root, a, rel)
+    if ev is None:
+        print(f"error: cannot analyze {rel}", file=sys.stderr)
+        return 2
+    print(render_why(ev))
+    return 0
+
+
+def cmd_deps(args) -> int:
+    root, a = _ctx(args)
+    rel = _rel_path(root, args.path)
+    if rel is None:
+        print(f"error: file not found in repository: {args.path}", file=sys.stderr)
+        return 2
+    view = analyze_deps_view(root, a, rel)
+    if view is None:
+        print(f"error: cannot analyze {rel}", file=sys.stderr)
+        return 2
+    print(render_deps(view))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="arch",
@@ -72,6 +165,24 @@ def main(argv: list[str] | None = None) -> int:
     p_scan.add_argument("repo", nargs="?", default=".", help="path to repository (default: .)")
     p_scan.add_argument("-o", "--output", help="also write a Markdown report to this path")
     p_scan.set_defaults(func=cmd_scan)
+
+    p_tree = sub.add_parser("tree", help="pruned, annotated repository tree")
+    p_tree.add_argument("repo", nargs="?", default=".")
+    p_tree.add_argument("-d", "--depth", type=int, default=2, help="directory depth (default 2)")
+    p_tree.set_defaults(func=cmd_tree)
+
+    for name, fn, help_ in [("file", cmd_file, "per-file dossier (history, imports, co-change)"),
+                            ("why", cmd_why, "why this file matters, with evidence"),
+                            ("deps", cmd_deps, "internal dependencies of a file")]:
+        p = sub.add_parser(name, help=help_)
+        p.add_argument("path", help="file path inside the repository")
+        p.add_argument("repo", nargs="?", default=".", help="repository root (default: .)")
+        p.set_defaults(func=fn)
+
+    p_hist = sub.add_parser("history", help="evolution of a file or a keyword/module")
+    p_hist.add_argument("target", help="file path, or a module/keyword such as 'tokenizer'")
+    p_hist.add_argument("repo", nargs="?", default=".")
+    p_hist.set_defaults(func=cmd_history)
 
     args = parser.parse_args(argv)
     logging.basicConfig(
