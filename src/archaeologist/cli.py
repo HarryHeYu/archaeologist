@@ -17,6 +17,7 @@ from .analyzers.tree import build_tree
 from .analyzers.dossier import analyze_file, analyze_why, analyze_deps_view
 from .analyzers.evolution import file_evolution, keyword_evolution
 from .analyzers.search import search as run_search
+from .analyzers import symbols as sym
 from .render import render_scan, render_hot, render_recent, render_contributors
 from .render import render_scan
 from .render_v2 import (
@@ -210,6 +211,39 @@ def cmd_search(args) -> int:
     return 0
 
 
+def cmd_symbol(args) -> int:
+    root = _git_root(args)
+    if not sym.HAS_TS:
+        print("error: symbol support requires the optional tree-sitter packages:\n"
+              "  pip install repo-archaeologist[symbols]", file=sys.stderr)
+        return 1
+    from .walker import walk_repo
+    ls = GitRepo(root).try_out("ls-files", "-z")
+    tracked = {p for p in ls.split("\x00") if p} if ls else None
+    files = walk_repo(root, tracked_only=tracked).files
+    all_syms = sym.index_symbols(files, root)
+    matches = sym.find_symbols(all_syms, args.name)
+    if not matches:
+        print(f"No symbols matching '{args.name}'.")
+        return 1
+    # best-effort "referenced by": files containing the name outside its
+    # definition site (text level, no resolution — confidence is implicit)
+    refs = sym.referenced_by(root, matches, files)
+    for s in matches:
+        loc = f"{s.file}:{s.start_line}-{s.end_line}"
+        print(f"{s.name}  ({s.kind})  {loc}"
+              + (f"  [in {s.parent}]" if s.parent else ""))
+        for child in s.children[:12]:
+            print(f"    .{child.name}()  :{child.start_line}")
+        if len(s.children) > 12:
+            print(f"    … and {len(s.children) - 12} more members")
+        users = refs.get((s.file, s.name), [])
+        if users:
+            print(f"    Referenced by (text-level): {', '.join(users[:6])}"
+                  + (f" (+{len(users) - 6})" if len(users) > 6 else ""))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="arch",
@@ -262,6 +296,11 @@ def main(argv: list[str] | None = None) -> int:
     p_srch.add_argument("repo", nargs="?", default=".")
     p_srch.add_argument("-n", "--top", type=int, default=10)
     p_srch.set_defaults(func=cmd_search)
+
+    p_sym = sub.add_parser("symbol", help="look up a function/class/struct by name (needs tree-sitter extras)")
+    p_sym.add_argument("name", help="symbol name, e.g. 'Parser' or 'parse'")
+    p_sym.add_argument("repo", nargs="?", default=".")
+    p_sym.set_defaults(func=cmd_symbol)
 
     args = parser.parse_args(argv)
     logging.basicConfig(

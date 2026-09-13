@@ -80,6 +80,12 @@ def analyze_file(root: Path, a: Analysis, rel: str) -> dict | None:
             build_header_index(root, all_files)
         d = extract_deps(root, rel, text)
         dossier["imports"] = d.internal + [f"{e} (external)" for e in d.external[:8]]
+    # top-level symbols (only if tree-sitter extras are installed)
+    dossier["symbols"] = []
+    if text is not None and lang:
+        from . import symbols as sym
+        if sym.HAS_TS and lang in sym.GRAMMARS:
+            dossier["symbols"] = sym.extract_symbols(lang, rel, text)
 
     if git:
         log = file_commits(git, rel)

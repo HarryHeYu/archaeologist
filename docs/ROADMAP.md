@@ -25,8 +25,9 @@ Long-term vision lives in the project brief; this file tracks the executable pla
 - [ ] incremental cache (`.archaeologist/`) keyed on HEAD commit (deferred: current scans are fast enough at tested scales)
 
 ## v0.3 — symbols (Tree-sitter, optional dependency)
-- [ ] unified Symbol model; `arch symbol <name>`
-- [ ] definitions/imports extraction feeding `arch file` and `arch why`
+- [x] unified Symbol model; `arch symbol <name>` (Python/C/C++/Rust/JS/Go)
+- [x] definitions extraction feeding `arch file` (Symbols section)
+- [ ] import/call edges between symbols; symbol refs feeding `arch why`
 
 ## v0.4 — evolution
 - [ ] `arch timeline`, module evolution, `arch compare <a> <b>`

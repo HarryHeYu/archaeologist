@@ -30,6 +30,8 @@ Requirements: Python ≥ 3.10, `git` on PATH. Zero third-party runtime dependenc
 ```bash
 git clone <this repo> && cd archaeologist
 pip install .
+# optional: symbol extraction via tree-sitter (`arch symbol`, symbols in `arch file`)
+pip install .[symbols]
 ```
 
 **Windows note:** the `arch.exe` launcher is installed into your user
@@ -55,6 +57,7 @@ python -m archaeologist scan .
 | `arch recent <repo>` (`--days N`) | Standalone recent-change summary |
 | `arch contributors <repo>` | Standalone contributor analysis |
 | `arch search <query> <repo>` | Search paths, commit messages, and contributors (substring, case-insensitive) |
+| `arch symbol <name> <repo>` | Find a function/class/struct by name with location, members, and text-level referencing files (needs extras) |
 
 Note the argument order: file-scoped commands take the path first, the
 repository root second (`arch file src/main.cpp .`). Both relative and

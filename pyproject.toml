@@ -25,6 +25,11 @@ arch = "archaeologist.cli:main"
 
 [project.optional-dependencies]
 dev = ["pytest>=8"]
+symbols = [
+    "tree-sitter>=0.23",
+    "tree-sitter-python", "tree-sitter-c", "tree-sitter-cpp",
+    "tree-sitter-rust", "tree-sitter-javascript", "tree-sitter-go",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]

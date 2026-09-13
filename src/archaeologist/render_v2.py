@@ -15,6 +15,16 @@ def render_file(dossier: dict) -> str:
     if d.get("loc"):
         loc = d["loc"]
         L.append(f"LOC: {loc.code:,} code / {loc.comment:,} comment / {loc.blank:,} blank")
+    if d.get("symbols"):
+        L.append("Symbols (top level):")
+        for s in d["symbols"][:14]:
+            L.append(f"  - {s.name} ({s.kind})  :{s.start_line}")
+        if len(d["symbols"]) > 14:
+            L.append(f"  … and {len(d['symbols']) - 14} more")
+    if d["imports"]:
+        L.append("Imports/includes:")
+        for imp in d["imports"][:12]:
+            L.append(f"  - {imp}")
     if not d["git"]:
         L.append("Git history: unavailable (not a git repository)")
         return "\n".join(L) + "\n"
@@ -26,10 +36,6 @@ def render_file(dossier: dict) -> str:
     L.append(f"Contributors:   {contribs}{more}")
     if d["main_contributor"]:
         L.append(f"Main contributor: {d['main_contributor']}")
-    if d["imports"]:
-        L.append("Imports/includes:")
-        for imp in d["imports"][:12]:
-            L.append(f"  - {imp}")
     if d["co_changed"]:
         L.append("Often changed together with (co-change):")
         for p in d["co_changed"]:

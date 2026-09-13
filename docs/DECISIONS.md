@@ -2,6 +2,18 @@
 
 Append-only log. Newest first.
 
+## 2026-09-13 — v0.3 (tree-sitter symbols, optional)
+- **Tree-sitter is an optional extra** (`pip install .[symbols]`): the core
+  tool keeps zero dependencies and every non-symbol command works without it.
+  Symbol features print an actionable install hint when the extras are absent.
+- **Symbols are name+kind+line-range only** (no name resolution, no call
+  graph) per the "best effort, confidence-explicit" principle. C function
+  names are dug out of `declarator` nodes; `Referenced by` is explicitly
+  labeled text-level in the output.
+- **`arch file` shows static info even for non-git repos**: imports and
+  symbols now render before the git-history section instead of being skipped
+  by the early return.
+
 ## 2026-09-13 — v0.2.1 (standalone commands + search)
 - **`hot` / `recent` / `contributors` skip the filesystem walk entirely**
   (they only need git + `ls-files`), so they answer in well under a second
