@@ -2,6 +2,24 @@
 
 Append-only log. Newest first.
 
+## 2026-09-13 — multi-agent review round (v0.4.1)
+- **Review process**: a docs-consistency subagent audited README/docs/CLI; when
+  the code-review and QA subagents kept failing on infra errors, destructive
+  QA (13 synthetic fixtures: empty dirs/repos, detached HEAD, renames, merge
+  commits, 3MB files, CRLF+BOM, Chinese/space paths, CLI misuse) and the code
+  review were done in the main session instead.
+- **Fixes from the round**: all git invocations now run with
+  `-c core.quotepath=off` (non-ASCII paths never octal-escaped); numstat
+  rename spellings (`a => b`, `a{x => y}b`) normalize to the new path so
+  renames count toward the surviving file; `search ""` is an error instead of
+  matching everything; `recent --days N` is respected verbatim (365-day
+  fallback now applies only to the default 30-day window); `scan`/git commands
+  reject file paths with "not a directory"; report stamp uses the real package
+  version; package version bumped 0.1.0 → 0.4.0 to match the roadmap.
+- Known accepted limitations: `history` on a pure-rename commit shows 0-line
+  events (git gives no numstat lines for pure renames); empty git repos render
+  "(no git history or no matching files)" which is accurate but terse.
+
 ## 2026-09-13 — v0.4 (timeline)
 - **`arch timeline` describes, it never interprets**: per-year commit counts,
   change magnitude, first-appearance of top-level areas, and the largest commit.

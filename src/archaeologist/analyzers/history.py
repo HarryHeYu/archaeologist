@@ -20,6 +20,24 @@ _META_FILES = {"README.md", "CMakeLists.txt", "Makefile", "package.json",
 MAX_HISTORY_COMMITS = 10000
 
 
+def _normalize_numstat_path(path: str) -> str:
+    """Reduce git rename spellings ("a => b", "a{x => y}b") to the new path."""
+    if "\t" in path:  # defensive: quoted-name<TAB>path
+        path = path.split("\t")[-1]
+    if "=>" in path:
+        if "{" in path and path.rstrip().endswith("}"):
+            pre, _, mid = path.partition("{")
+            old_new, _, suf = mid.rpartition("}")
+            path = pre + suf
+            if " => " in old_new:
+                path += old_new.split(" => ")[1]
+        elif " => " in path:
+            path = path.split(" => ")[1]
+        else:
+            path = path.replace("=>", "").strip()
+    return path.strip('"')
+
+
 def _now_utc() -> _dt.datetime:
     return _dt.datetime.now(_dt.timezone.utc)
 
@@ -65,12 +83,9 @@ def analyze_hot_files(git: GitRepo | None, tracked: list[str],
             cols = line.split("\t")
             if len(cols) < 3:
                 continue
-            path = cols[-1]
-            if "\t" in path:
-                path = path.split("\t")[-1]
-            if not path or path == "":
+            path = _normalize_numstat_path(cols[-1])
+            if not path:
                 continue
-            tracked_set = tracked  # noqa: F841 (kept for clarity)
             commits_by_file[path] += 1
             contributors_by_file[path].add(email.lower())
             last_touch[path] = date_s
@@ -131,8 +146,9 @@ def analyze_recent(git: GitRepo | None, days: int = 30) -> RecentChanges:
         return empty
     since = (_now_utc() - _dt.timedelta(days=days)).strftime("%Y-%m-%d")
     n = git.commits_since(since)
-    if n == 0:
-        # fall back to a one-year window so the section stays useful
+    if n == 0 and days == 30:
+        # default window only: fall back to one year so the section stays useful;
+        # an explicit --days N is respected as-is
         days = 365
         since = (_now_utc() - _dt.timedelta(days=days)).strftime("%Y-%m-%d")
         n = git.commits_since(since)
@@ -163,7 +179,7 @@ def analyze_recent(git: GitRepo | None, days: int = 30) -> RecentChanges:
                 cols = line.split("\t")
                 if len(cols) < 3:
                     continue
-                path = cols[-1].split("\t")[-1]
+                path = _normalize_numstat_path(cols[-1])
                 names_in_commit.append(path)
                 try:
                     a = int(cols[0]) if cols[0] != "-" else 0
@@ -241,7 +257,7 @@ def analyze_contributors(git: GitRepo | None, top_n: int = 10) -> list[Contribut
             cols = line.split("\t")
             if len(cols) < 3:
                 continue
-            path = cols[-1].split("\t")[-1]
+            path = _normalize_numstat_path(cols[-1])
             files[key].add(path)
             top = posixpath.dirname(path).split("/")[0] if posixpath.dirname(path) else "(root)"
             dir_hits[key][top] += 1

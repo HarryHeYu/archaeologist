@@ -95,7 +95,7 @@ def render_entrypoints(a: Analysis) -> list[str]:
 def render_hot(hot_files: list) -> list[str]:
     L = ["", "Hot Files", "─────────"]
     if not hot_files:
-        L.append("  (git history unavailable)")
+        L.append("  (no git history or no matching files)")
         return L
     for i, h in enumerate(hot_files, 1):
         L.append(
@@ -132,7 +132,7 @@ def render_recent(r) -> list[str]:
 def render_contributors(contributors: list) -> list[str]:
     L = ["", "Contributors", "────────────"]
     if not contributors:
-        L.append("  (git history unavailable)")
+        L.append("  (no git history or no matching files)")
         return L
     for c in contributors:
         L.append(f"  {c.name}")

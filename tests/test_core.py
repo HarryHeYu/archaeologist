@@ -109,3 +109,12 @@ def test_unicode_and_space_paths(tmp_path):
     (d / "模块.py").write_text("x = 1\n", encoding="utf-8")
     walk = walk_repo(tmp_path)
     assert any(f.rel == "中文 目录/模块.py" for f in walk.files)
+
+
+def test_scan_rejects_file_and_empty_search(tmp_path, capsys):
+    import subprocess, sys
+    f = tmp_path / "plain.txt"
+    f.write_text("x\n", encoding="utf-8")
+    from archaeologist.cli import main
+    assert main(["scan", str(f)]) == 2
+    assert main(["search", "", str(tmp_path)]) == 2

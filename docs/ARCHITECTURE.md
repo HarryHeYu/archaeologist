@@ -4,14 +4,21 @@
 
 ```text
 cli.py                 argument parsing, command dispatch, logging
-  └─ analysis.py? (currently build_analysis in cli.py)
+  └─ build_analysis()   runs the analyzers into an Analysis model
        ├─ gitcmd.py        thin `git` subprocess wrapper (GitRepo, GitError, Commit)
        ├─ walker.py        file walk, ignore rules, binary sniffing, language table
        ├─ loc_counter.py   per-language LOC counting (code/comment/blank)
        ├─ analyzers/       pure analysis functions: models in → models out
        │    ├─ overview.py      repository identity & git facts
        │    ├─ structure.py     language stats, directory roles, entrypoints
-       │    └─ history.py       hot files, recent changes, contributors (git)
+       │    ├─ history.py       hot files, recent changes, contributors (git)
+       │    ├─ tree.py          pruned annotated tree
+       │    ├─ dossier.py       per-file dossier, why-verdicts, deps view
+       │    ├─ deps.py          include/import extraction and resolution
+       │    ├─ evolution.py     file & keyword evolution timelines
+       │    ├─ search.py        path/commit/contributor search
+       │    ├─ symbols.py       optional tree-sitter symbol extraction
+       │    └─ timeline.py      year-by-year repository evolution
        ├─ models.py        dataclasses shared across analyzers
        ├─ render.py        terminal output (bars, sections)
        └─ report.py        Markdown report generation
@@ -40,6 +47,8 @@ cli.py                 argument parsing, command dispatch, logging
 
 ## Extending
 
-Add a command = add an analyzer function (models → models), a renderer, and a
-subparser in `cli.py`. v0.2 plans `arch tree`, `arch file`, `arch history`,
-`arch why`, `arch deps` on top of the same primitives.
+Add a command = add an analyzer function (models → models), a renderer
+(`render.py` for scan-level sections, `render_v2.py` for per-command output),
+and a subparser in `cli.py`. v0.2/v0.3/v0.4 commands (`tree`, `file`,
+`history`, `why`, `deps`, `search`, `symbol`, `timeline`) all follow this
+pattern.

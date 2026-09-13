@@ -117,3 +117,26 @@ def test_renamed_file_history(git_repo: Path):
     # must still show the file under its new name in recent changes
     r = analyze_recent(g, days=30)
     assert any("renamed.py" in n for n in r.new_files)
+
+
+def test_rename_numstat_normalized(git_repo):
+    git("mv", "src/extra.py", "src/renamed2.py", cwd=git_repo)
+    git("-c", "user.name=Alice", "-c", "user.email=alice@example.com",
+        "commit", "-m", "rename extra2", cwd=git_repo)
+    from archaeologist.analyzers.history import _normalize_numstat_path, analyze_hot_files
+    assert _normalize_numstat_path("old.py => new.py") == "new.py"
+    assert _normalize_numstat_path("src/{a.py => b.py}") == "src/b.py"
+    # the renamed file must appear as a hot candidate under its new name
+    hot = analyze_hot_files(GitRepo(git_repo),
+                            ["src/core.py", "src/renamed2.py", "tests/test_core.py", "README.md"])
+    assert "src/renamed2.py" in [h.path for h in hot]
+    assert not any("=>" in h.path for h in hot)
+
+
+def test_quotepath_off_for_non_ascii(git_repo):
+    (git_repo / "src" / "中文模块.py").write_text("value = 3\n", encoding="utf-8")
+    git("add", ".", cwd=git_repo)
+    git("-c", "user.name=Alice", "-c", "user.email=alice@example.com",
+        "commit", "-m", "add 中文模块", cwd=git_repo)
+    ls = GitRepo(git_repo).try_out("ls-files", "-z")
+    assert "src/中文模块.py" in ls.split("\x00")

@@ -31,7 +31,8 @@ class GitRepo:
         self.path = Path(path)
 
     def _run(self, *args: str, text: bool = True, check: bool = True):
-        cmd = ["git", "-C", str(self.path), *args]
+        # core.quotepath=off: never octal-escape non-ASCII (Chinese etc.) paths
+        cmd = ["git", "-c", "core.quotepath=off", "-C", str(self.path), *args]
         try:
             proc = subprocess.run(
                 cmd, capture_output=True, text=text, encoding="utf-8",

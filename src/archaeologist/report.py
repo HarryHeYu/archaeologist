@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import datetime as _dt
 
+from . import __version__
 from .models import Analysis
 
 
@@ -15,7 +16,7 @@ def generate_report(a: Analysis) -> str:
 
     w(f"# Repository Archaeology Report: {o.name}")
     w("")
-    w(f"_Generated {now} by repo-archaeologist v0.1_")
+    w(f"_Generated {now} by repo-archaeologist v{__version__}_")
     w("")
 
     # Overview

@@ -57,6 +57,9 @@ def cmd_scan(args: argparse.Namespace) -> int:
     if not root.exists():
         print(f"error: path does not exist: {root}", file=sys.stderr)
         return 2
+    if not root.is_dir():
+        print(f"error: not a directory: {root}", file=sys.stderr)
+        return 2
     log.info("scanning %s", root)
     a = build_analysis(root)
     if args.output:
@@ -161,6 +164,9 @@ def _git_root(args) -> Path:
     if not root.exists():
         print(f"error: path does not exist: {root}", file=sys.stderr)
         sys.exit(2)
+    if not root.is_dir():
+        print(f"error: not a directory: {root}", file=sys.stderr)
+        sys.exit(2)
     return root
 
 
@@ -192,6 +198,9 @@ def cmd_contributors(args) -> int:
 
 def cmd_search(args) -> int:
     root = _git_root(args)
+    if not args.query.strip():
+        print("error: empty search query", file=sys.stderr)
+        return 2
     res = run_search(root, args.query, limit=args.top)
     q = args.query
     if not (res["paths"] or res["commits"] or res["contributors"]):

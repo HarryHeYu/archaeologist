@@ -64,6 +64,11 @@ Note the argument order: file-scoped commands take the path first, the
 repository root second (`arch file src/main.cpp .`). Both relative and
 absolute paths work; Unicode and space-containing paths are supported.
 
+Useful flags: `arch tree -d N` (depth, default 2), `arch hot -n N`,
+`arch contributors -n N`, `arch search -n N` (result count), `arch recent
+--days N` (default 30, widens to 365 automatically when the default window is
+empty), and global `-v` for debug logging.
+
 Non-git directories work fine — git-derived sections degrade gracefully to
 "unavailable" instead of failing.
 
