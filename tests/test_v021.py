@@ -44,3 +44,14 @@ def test_search_paths_commits_contributors(git_repo):
     contribs = search(git_repo, "alice")
     assert any(c["name"] == "Alice" for c in contribs["contributors"])
     assert search(git_repo, "zzz-nothing")["paths"] == []
+
+
+def test_timeline(git_repo):
+    from archaeologist.analyzers.timeline import build_timeline, render_timeline
+    from archaeologist.gitcmd import GitRepo
+    t = build_timeline(git_repo, GitRepo(git_repo))
+    assert t is not None
+    assert any(y["commits"] > 0 for y in t["years"].values())
+    out = render_timeline(t)
+    assert "Repository Timeline" in out
+    assert "largest change" in out

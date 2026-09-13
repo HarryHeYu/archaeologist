@@ -30,7 +30,8 @@ Long-term vision lives in the project brief; this file tracks the executable pla
 - [ ] import/call edges between symbols; symbol refs feeding `arch why`
 
 ## v0.4 — evolution
-- [ ] `arch timeline`, module evolution, `arch compare <a> <b>`
+- [x] `arch timeline`
+- [ ] module evolution refinements, `arch compare <a> <b>`
 
 ## v0.5 — optional AI layer (never required)
 - [ ] `arch explain` / `arch ask` over structured analysis results only

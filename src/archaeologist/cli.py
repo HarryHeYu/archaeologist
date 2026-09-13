@@ -17,6 +17,7 @@ from .analyzers.tree import build_tree
 from .analyzers.dossier import analyze_file, analyze_why, analyze_deps_view
 from .analyzers.evolution import file_evolution, keyword_evolution
 from .analyzers.search import search as run_search
+from .analyzers.timeline import build_timeline, render_timeline
 from .analyzers import symbols as sym
 from .render import render_scan, render_hot, render_recent, render_contributors
 from .render import render_scan
@@ -211,6 +212,17 @@ def cmd_search(args) -> int:
     return 0
 
 
+def cmd_timeline(args) -> int:
+    root = _git_root(args)
+    t = build_timeline(root, GitRepo(root))
+    if t is None:
+        print("error: git history unavailable (not a git repository, or empty)",
+              file=sys.stderr)
+        return 1
+    print(render_timeline(t))
+    return 0
+
+
 def cmd_symbol(args) -> int:
     root = _git_root(args)
     if not sym.HAS_TS:
@@ -301,6 +313,10 @@ def main(argv: list[str] | None = None) -> int:
     p_sym.add_argument("name", help="symbol name, e.g. 'Parser' or 'parse'")
     p_sym.add_argument("repo", nargs="?", default=".")
     p_sym.set_defaults(func=cmd_symbol)
+
+    p_tl = sub.add_parser("timeline", help="year-by-year repository evolution")
+    p_tl.add_argument("repo", nargs="?", default=".")
+    p_tl.set_defaults(func=cmd_timeline)
 
     args = parser.parse_args(argv)
     logging.basicConfig(

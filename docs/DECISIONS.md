@@ -2,6 +2,14 @@
 
 Append-only log. Newest first.
 
+## 2026-09-13 — v0.4 (timeline)
+- **`arch timeline` describes, it never interprets**: per-year commit counts,
+  change magnitude, first-appearance of top-level areas, and the largest commit.
+  Statements like "new areas: `cuda/`" are directly verifiable in the diffs.
+- Timeline paths are filtered through the same ignore list as the walker and
+  rename artifacts (`=>` forms) are skipped, so IDE dirs and vendor trees
+  don't show up as "new areas".
+
 ## 2026-09-13 — v0.3 (tree-sitter symbols, optional)
 - **Tree-sitter is an optional extra** (`pip install .[symbols]`): the core
   tool keeps zero dependencies and every non-symbol command works without it.
