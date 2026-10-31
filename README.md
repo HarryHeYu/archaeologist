@@ -1,5 +1,7 @@
 # Repo Archaeologist (`arch`)
 
+> 🧰 **Use it from your coding agent**: packaged as the `repo-archaeology` skill in [skills-arsenal](https://github.com/HarryHeYu/skills-arsenal) — ask *"what does this repo do?"* in ZCode / Claude Code.
+
 > Understand an unfamiliar repository in seconds — not minutes.
 
 `arch` answers "what is this repo, where is the important code, and how did it
